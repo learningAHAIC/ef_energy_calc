@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>分流器电池效率计算器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: auto;
+    background: #020617;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  h1 {
+    margin-top: 0;
+    font-size: 22px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  label {
+    align-self: center;
+  }
+  input, select, button, textarea {
+    font-family: inherit;
+    font-size: 14px;
+  }
+  input, select, textarea {
+    background: #020617;
+    color: #e5e7eb;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 8px;
+  }
+  button {
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover {
+    background: #1d4ed8;
+  }
+  textarea {
+    width: 100%;
+    height: 260px;
+    resize: vertical;
+    margin-top: 12px;
+    white-space: pre-wrap;
+  }
+  .footer {
+    opacity: 0.6;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>分流器电池效率计算器</h1>
+
+    <div class="grid">
+      <label>分流器数量 N：</label>
+      <input id="nInput" type="number" value="12" min="1" max="256" />
+
+      <label>电池类型：</label>
+      <select id="batterySelect">
+        <option value="0">谷地 (1100)</option>
+        <option value="1">武陵 (1600)</option>
+      </select>
+
+      <label>期望耗电量：</label>
+      <input id="expectedInput" type="number" value="5000" step="5" />
+    </div>
+
+    <button onclick="onCalculate()">计算</button>
+
+    <textarea id="output" readonly></textarea>
+
+    <div class="footer">
+      本工具为本地 HTML 页面，不联网，不上传数据。
+    </div>
+  </div>
+
+<script>
+/* ---------- Fraction (使用 BigInt 保证精度) ---------- */
+class Fraction {
+  constructor(n, d = 1n) {
+    if (d === 0n) throw new Error("分母不能为0");
+    if (d < 0n) { n = -n; d = -d; }
+    const g = Fraction.gcd(n < 0n ? -n : n, d);
+    this.n = n / g;
+    this.d = d / g;
+  }
+  static gcd(a, b) {
+    while (b !== 0n) {
+      const t = a % b;
+      a = b;
+      b = t;
+    }
+    return a;
+  }
+  add(o) { return new Fraction(this.n * o.d + o.n * this.d, this.d * o.d); }
+  sub(o) { return new Fraction(this.n * o.d - o.n * this.d, this.d * o.d); }
+  mul(o) { return new Fraction(this.n * o.n, this.d * o.d); }
+  div(o) { return new Fraction(this.n * o.d, this.d * o.n); }
+  gt(o) { return this.n * o.d > o.n * this.d; }
+  lt(o) { return this.n * o.d < o.n * this.d; }
+  toFloat() { return Number(this.n) / Number(this.d); }
+  toString() {
+    if (this.d === 1n) return this.n.toString();
+    return this.n.toString() + "/" + this.d.toString();
+  }
+}
+
+/* ---------- 原算法移植 ---------- */
+function mult_of_two_or_three(x) {
+  if (x <= 0n) return false;
+  let c2 = 0, c3 = 0;
+  while (x % 2n === 0n) { c2++; x /= 2n; }
+  while (x % 3n === 0n) { c3++; x /= 3n; }
+  if (x === 1n) return [c2, c3];
+  return false;
+}
+
+function calculate(N, battery_type, expected_electricity) {
+  let output = [];
+
+  if (!Number.isInteger(N) || N <= 0) throw new Error("分流器数量必须为正整数");
+  if (N > 256) throw new Error("分流器数量不能超过256");
+  if (![0,1].includes(battery_type)) throw new Error("电池类型必须为0或1");
+  if (expected_electricity <= 0) throw new Error("期望耗电量必须为正数");
+  if (expected_electricity % 5 !== 0) throw new Error("期望耗电量必须为5的倍数");
+
+  const Belt_efficiency = new Fraction(1n, 2n);
+  const Battery_lasting_seconds = 40n;
+  const Central = 200n;
+
+  const efficiency = 1100n + BigInt(battery_type) * 500n;
+  const energy_generated = efficiency * Battery_lasting_seconds;
+
+  const full_load = (BigInt(expected_electricity) - Central) / efficiency;
+  const target = (BigInt(expected_electricity) - Central) % efficiency;
+  const serving_efficiency = new Fraction(target, energy_generated);
+
+  const den = serving_efficiency.d;
+  const mults = mult_of_two_or_three(den);
+  if (mults) {
+    output.push("当前版本的电池效率为1100和1600，无法完美电量，因此这个方法留在以后再实现\n");
+    return output.join("");
+  }
+
+  let dp = new Array(N).fill(0);
+
+  let max_scaling = new Fraction(1n << BigInt(N), 1n);
+  let target_efficiency = serving_efficiency.mul(max_scaling);
+  let current = Belt_efficiency.mul(max_scaling);
+
+  for (let i = 0; i < N - 1; i++) {
+    if (current.gt(target_efficiency)) {
+      current = current.div(new Fraction(2n,1n));
+      continue;
+    } else if (current.lt(new Fraction(1n,1n))) {
+      throw new Error("N 不足以表示所需精度，请增大 N");
+    }
+    dp[i] = 1;
+    target_efficiency = target_efficiency.sub(current);
+    current = current.div(new Fraction(2n,1n));
+  }
+
+  let is_last_necessary = 0;
+  if (current.gt(target_efficiency)) {
+    if (current.div(new Fraction(2n,1n)).gt(target_efficiency)) {
+      dp[N-1] = 1;
+    } else {
+      dp[N-1] = 2;
+    }
+  } else {
+    dp[N-2] += 1;
+  }
+
+  let check = 2;
+  let i = N - 1;
+  while (check > 0 && i > 0) {
+    if (dp[i] > 1) {
+      dp[i-1] += 1;
+      dp[i] -= 2;
+      is_last_necessary = N - i;
+    } else if (dp[i] === 0 && check === 2) {
+      is_last_necessary = 1;
+    } else {
+      check -= 1;
+    }
+    i--;
+  }
+
+  const dp_actual = dp.slice(0, N - is_last_necessary);
+  let actual_efficiency = new Fraction(0n,1n);
+  for (let i = 0; i < dp_actual.length; i++) {
+    if (dp_actual[i] > 0) {
+      const term = new Fraction(BigInt(dp_actual[i]),1n)
+        .mul(new Fraction(1n, 1n << BigInt(i)))
+        .mul(Belt_efficiency);
+      actual_efficiency = actual_efficiency.add(term);
+    }
+  }
+
+  output.push(`需要 ${full_load} 个全速发电器\n`);
+  output.push(`实际使用了 ${N - is_last_necessary} 个分流器\n`);
+
+  let temp_list = [];
+  for (let i = 0; i < dp_actual.length; i++) {
+    if (dp_actual[i] > 0) temp_list.push(`第${i+1}`);
+  }
+
+  if (temp_list.length > 0) {
+    output.push(`需连接 ${temp_list.join(", ")} 个分流器至输出口\n`);
+  } else {
+    output.push("不需要连接任何分流器至输出口\n");
+  }
+
+  const interval = new Fraction(1n,1n).div(actual_efficiency);
+  output.push(`每 ${interval.toFloat().toFixed(6)} 秒运送一个电池至发电器 (${interval.toString()})\n`);
+
+  const actual_total = new Fraction(energy_generated,1n).mul(actual_efficiency)
+    .add(new Fraction(full_load * efficiency + Central,1n));
+
+  // 每分钟消耗电池数量 = 60 * 实际效率
+  const batteries_per_min = new Fraction(full_load, 1n)
+  .add(actual_efficiency.mul(new Fraction(60n, 1n)));
+  output.push(
+  `每分钟消耗电池约 ${batteries_per_min.toFloat().toFixed(6)} 个 (${batteries_per_min.toString()})\n`
+  );
+
+
+  output.push(`目标效率为 ${expected_electricity}\n`);
+  output.push(`实际效率为 ${actual_total.toFloat().toFixed(6)} (${actual_total.toString()})\n`);
+
+  return output.join("");
+}
+
+function onCalculate() {
+  const out = document.getElementById("output");
+  try {
+    const N = parseInt(document.getElementById("nInput").value, 10);
+    const battery_type = parseInt(document.getElementById("batterySelect").value, 10);
+    const expected = parseInt(document.getElementById("expectedInput").value, 10);
+
+    const result = calculate(N, battery_type, expected);
+    out.value = result;
+  } catch (e) {
+    out.value = "错误: " + e.message;
+  }
+}
+</script>
+</body>
+</html>

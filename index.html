@@ -24,6 +24,11 @@
     margin-top: 0;
     font-size: 22px;
   }
+  .subtitle {
+    margin: 6px 0 16px 0;
+    font-size: 13px;
+    color: #94a3b8;   /* 比正文淡一点 */
+  }
   .grid {
     display: grid;
     grid-template-columns: minmax(120px, 200px) 1fr;
@@ -110,6 +115,7 @@
 <body>
   <div class="container">
     <h1>分流器电池效率计算器</h1>
+    <p class="subtitle">本计算器采用的分流器全部为1分2的分流，不采用1分3的情况</p>
 
     <div class="grid">
       <label>分流器数量 N：</label>

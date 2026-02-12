@@ -65,7 +65,7 @@ def calculate(N, battery_type, expected_electricity):
     # 如果可以精确分流
     den = serving_efficiency.denominator
     mults = mult_of_two_or_three(den)
-    if mults:
+    if mults and serving_efficiency.numerator != 0:
         output.append(calc_exact())
         return "".join(output)
 

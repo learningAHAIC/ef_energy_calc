@@ -62,7 +62,7 @@ def main():
     # 如果可以用1分2和1分3完美分出，则不需要近似计算
     den = serving_efficiency.denominator
     mults = mult_of_two_or_three(den)
-    if mults:
+    if mults and serving_efficiency.numerator != 0:
         calc_exact()
         return
 

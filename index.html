@@ -160,7 +160,7 @@ function calculate(N, battery_type, expected_electricity) {
 
   const den = serving_efficiency.d;
   const mults = mult_of_two_or_three(den);
-  if (mults) {
+  if (serving_efficiency.n !== 0n && mults) {
     output.push("当前版本的电池效率为1100和1600，无法完美电量，因此这个方法留在以后再实现\n");
     return output.join("");
   }

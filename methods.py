@@ -24,9 +24,9 @@ def calc_exact():
 
 def main():
     # 输入参数
-    N = 30  # 分流器数量
+    N = 13  # 分流器数量
     battery_type = 0  # 电池类型，0 谷地, 1 武陵
-    expected_electricity = 200 + 1100 + 685  # 期望耗电量
+    expected_electricity = 4695  # 期望耗电量
 
     # 检查输入参数
     if type(N) != int or N <= 0:
@@ -48,16 +48,16 @@ def main():
     # 静态参数
     Belt_efficiency = Fraction(1, 2)
     Battery_lasting_seconds = 40
-    Central = 200
+    Central_power_generated = 200
 
     # 公式
-    efficiency = 1100 + battery_type * 500
-    energy_generated = efficiency * Battery_lasting_seconds
+    energy_generated_per_generator = 1100 + battery_type * 500
+    energy_generated_per_battery = energy_generated_per_generator * Battery_lasting_seconds
 
     # 基础计算
-    full_load = (expected_electricity - Central) // efficiency      # 全速发电机数量
-    target = (expected_electricity - Central) % efficiency          # 目标发电效率
-    serving_efficiency = Fraction(target, energy_generated)         # 供应电池比例
+    full_load = (expected_electricity - Central_power_generated) // energy_generated_per_generator      # 全速发电机数量
+    target = (expected_electricity - Central_power_generated) % energy_generated_per_generator          # 目标发电效率
+    serving_efficiency = Fraction(target, energy_generated_per_battery)         # 供应电池比例
 
     # 如果可以用1分2和1分3完美分出，则不需要近似计算
     den = serving_efficiency.denominator
@@ -74,14 +74,11 @@ def main():
     current = Belt_efficiency * max_scaling
 
     for i in range(N - 1):
+        current /= 2
         if current > target_efficiency:
-            current /= 2
             continue
-        elif current < 1:
-            raise ValueError("N 不足以表示所需精度，请增大 N")
         dp[i] = 1
         target_efficiency -= current
-        current /= 2
 
     is_last_necessary = 0
     if current > target_efficiency:
@@ -109,7 +106,7 @@ def main():
     dp_actual = dp[:N - is_last_necessary]
     actual_efficiency = Fraction(0, 1)
     for i in range(len(dp_actual)):
-        actual_efficiency += dp_actual[i] * (Fraction(1, 2) ** i) * Belt_efficiency
+        actual_efficiency += dp_actual[i] * (Fraction(1, 2) ** (i + 1)) * Belt_efficiency
 
     # 输出
     print(f"需要 {full_load} 个全速发电器")
@@ -128,7 +125,7 @@ def main():
     interval = Fraction(1, actual_efficiency)
     print(f"每 {float(interval):.6f} 秒运送一个电池至发电器 ({interval})")
 
-    actual_total = energy_generated * actual_efficiency + full_load * efficiency + Central
+    actual_total = energy_generated_per_battery * actual_efficiency + full_load * energy_generated_per_generator + Central_power_generated
 
     print(f"目标效率为 {expected_electricity}")
     print(f"实际效率为 {float(actual_total):.6f} ({actual_total})")

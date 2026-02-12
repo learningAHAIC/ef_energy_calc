@@ -215,15 +215,12 @@ function calculate(N, battery_type, expected_electricity) {
   let current = Belt_efficiency.mul(max_scaling);
 
   for (let i = 0; i < N - 1; i++) {
+    current = current.div(new Fraction(2n,1n));
     if (current.gt(target_efficiency)) {
-      current = current.div(new Fraction(2n,1n));
       continue;
-    } else if (current.lt(new Fraction(1n,1n))) {
-      throw new Error("N 不足以表示所需精度，请增大 N");
     }
     dp[i] = 1;
     target_efficiency = target_efficiency.sub(current);
-    current = current.div(new Fraction(2n,1n));
   }
 
   let is_last_necessary = 0;
@@ -257,7 +254,7 @@ function calculate(N, battery_type, expected_electricity) {
   for (let i = 0; i < dp_actual.length; i++) {
     if (dp_actual[i] > 0) {
       const term = new Fraction(BigInt(dp_actual[i]),1n)
-        .mul(new Fraction(1n, 1n << BigInt(i)))
+        .mul(new Fraction(1n, 1n << BigInt(i + 1)))
         .mul(Belt_efficiency);
       actual_efficiency = actual_efficiency.add(term);
     }

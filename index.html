@@ -20,59 +20,25 @@
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,.4);
   }
-  h1 {
-    margin-top: 0;
-    font-size: 22px;
-  }
-  .subtitle {
-    margin: 6px 0 16px 0;
-    font-size: 13px;
-    color: #94a3b8;
-  }
+  h1 { margin-top: 0; font-size: 22px; }
+  .subtitle { margin: 6px 0 16px 0; font-size: 13px; color: #94a3b8; }
   .grid {
     display: grid;
     grid-template-columns: minmax(120px, 200px) 1fr;
     gap: 12px;
     margin-bottom: 16px;
   }
-  label {
-    align-self: center;
-  }
-  input, select, button, textarea {
-    font-family: inherit;
-    font-size: 14px;
-  }
+  label { align-self: center; }
+  input, select, button, textarea { font-family: inherit; font-size: 14px; }
   input, select, textarea {
-    background: #020617;
-    color: #e5e7eb;
-    border: 1px solid #1e293b;
-    border-radius: 6px;
-    padding: 8px;
+    background: #020617; color: #e5e7eb; border: 1px solid #1e293b; border-radius: 6px; padding: 8px;
   }
   button {
-    background: #2563eb;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
+    background: #2563eb; border: none; border-radius: 8px; padding: 10px 16px; color: white; cursor: pointer; font-weight: 600;
   }
-  button:hover {
-    background: #1d4ed8;
-  }
-  textarea {
-    width: 100%;
-    height: 260px;
-    resize: vertical;
-    margin-top: 12px;
-    white-space: pre-wrap;
-  }
-  .footer {
-    opacity: 0.6;
-    margin-top: 10px;
-    font-size: 12px;
-  }
+  button:hover { background: #1d4ed8; }
+  textarea { width: 100%; height: 260px; resize: vertical; margin-top: 12px; white-space: pre-wrap; }
+  .footer { opacity: 0.6; margin-top: 10px; font-size: 12px; }
 
   @media (max-width: 600px) {
     body { padding: 12px; }
@@ -109,21 +75,15 @@
     <textarea id="output" readonly></textarea>
 
     <div style="margin-top:12px;">
-      <button id="genImgBtn" onclick="onGenerateImage()" style="display:none;">
-        生成结构图
-      </button>
+      <button id="genImgBtn" onclick="onGenerateImage()" style="display:none;">生成结构图</button>
     </div>
 
     <div id="imageContainer" style="margin-top:12px; display:none;">
       <img id="resultImage" style="max-width:100%; height:auto; display:block; border-radius:8px;"/>
-      <button id="openOriginalBtn" style="margin-top:8px; display:none;" onclick="openOriginalImage()">
-        在新页面查看原图
-      </button>
+      <button id="openOriginalBtn" style="margin-top:8px; display:none;" onclick="openOriginalImage()">在新页面查看原图</button>
     </div>
 
-    <div class="footer">
-      本工具为本地 HTML 页面，不联网，不上传数据。
-    </div>
+    <div class="footer">本工具为本地 HTML 页面，不联网，不上传数据。</div>
   </div>
 
 <script>
@@ -133,30 +93,19 @@ class Fraction {
     if (d === 0n) throw new Error("分母不能为0");
     if (d < 0n) { n = -n; d = -d; }
     const g = Fraction.gcd(n < 0n ? -n : n, d);
-    this.n = n / g;
-    this.d = d / g;
+    this.n = n / g; this.d = d / g;
   }
-  static gcd(a, b) {
-    while (b !== 0n) {
-      const t = a % b;
-      a = b;
-      b = t;
-    }
-    return a;
-  }
+  static gcd(a, b) { while (b !== 0n) { const t = a % b; a = b; b = t; } return a; }
   add(o) { return new Fraction(this.n * o.d + o.n * this.d, this.d * o.d); }
   sub(o) { return new Fraction(this.n * o.d - o.n * this.d, this.d * o.d); }
   mul(o) { return new Fraction(this.n * o.n, this.d * o.d); }
   div(o) { return new Fraction(this.n * o.d, this.d * o.n); }
   gt(o) { return this.n * o.d > o.n * this.d; }
   toFloat() { return Number(this.n) / Number(this.d); }
-  toString() {
-    if (this.d === 1n) return this.n.toString();
-    return this.n.toString() + "/" + this.d.toString();
-  }
+  toString() { if (this.d === 1n) return this.n.toString(); return this.n.toString() + "/" + this.d.toString(); }
 }
 
-/* ---------- 原算法 ---------- */
+/* ---------- 原算法（返回 dp_actual） ---------- */
 function mult_of_two_or_three(x) {
   if (x <= 0n) return false;
   let c2 = 0, c3 = 0;
@@ -248,15 +197,9 @@ function calculateWithDp(N, battery_type, expected_electricity) {
   output.push(`实际使用了 ${N - is_last_necessary} 个分流器\n`);
 
   let temp_list = [];
-  for (let i = 0; i < dp_actual.length; i++) {
-    if (dp_actual[i] > 0) temp_list.push(`第${i+1}`);
-  }
-
-  if (temp_list.length > 0) {
-    output.push(`需连接 ${temp_list.join(", ")} 个分流器至输出口\n`);
-  } else {
-    output.push("不需要连接任何分流器至输出口\n");
-  }
+  for (let i = 0; i < dp_actual.length; i++) if (dp_actual[i] > 0) temp_list.push(`第${i+1}`);
+  if (temp_list.length > 0) output.push(`需连接 ${temp_list.join(", ")} 个分流器至输出口\n`);
+  else output.push("不需要连接任何分流器至输出口\n");
 
   const interval = new Fraction(1n,1n).div(actual_efficiency);
   output.push(`每 ${interval.toFloat().toFixed(6)} 秒运送一个电池至发电器 (${interval.toString()})\n`);
@@ -274,114 +217,149 @@ function calculateWithDp(N, battery_type, expected_electricity) {
   return { text: output.join(""), dp_actual };
 }
 
-/* ---------- 图片生成 ---------- */
+/* ---------- 图片加载与绘制（严格复刻 Python 旋转逻辑） ---------- */
 let lastDpActual = null;
 let lastImageDataURL = null;
 
 const images = {};
-const imageNames = ["belt","belt_turn","combiner","diverter","logistics_bridge","generator"];
+const imageList = {
+  belt: "src/img/belt.png",
+  belt_turn: "src/img/belt_turn.png",
+  combiner: "src/img/combiner.png",
+  diverter: "src/img/diverter.png",
+  logistics_bridge: "src/img/logistics_bridge.png",
+  generator: "src/img/generator.png"
+};
 
-function loadImages(callback) {
+function loadAllImages() {
+  const entries = Object.entries(imageList);
   let loaded = 0;
-  imageNames.forEach(name => {
-    const img = new Image();
-    img.src = "src/img/" + name + ".png";
-    img.onload = () => {
-      images[name] = img;
-      loaded++;
-      if (loaded === imageNames.length) callback();
-    };
+  return new Promise((resolve, reject) => {
+    entries.forEach(([key, src]) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        images[key] = img;
+        loaded++;
+        if (loaded === entries.length) resolve();
+      };
+      img.onerror = () => reject(new Error("加载图片失败: " + src));
+    });
   });
 }
 
-function onGenerateImage() {
+function drawRotated(ctx, img, x, y, tile, angleDeg) {
+  const rad = angleDeg * Math.PI / 180;
+  ctx.save();
+  ctx.translate(x*tile + tile/2, y*tile + tile/2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, -tile/2, -tile/2, tile, tile);
+  ctx.restore();
+}
+
+async function onGenerateImage() {
   if (!lastDpActual) return;
 
-  loadImages(() => {
-    const tile = 224;
-    const n = lastDpActual.length;
-    const cols = n + 4;
-    const rows = 4;
+  await loadAllImages();
 
-    const canvas = document.createElement("canvas");
-    canvas.width = cols * tile + images.generator.width;
-    canvas.height = rows * tile;
-    const ctx = canvas.getContext("2d");
+  const tile = 224;
+  const n = lastDpActual.length;
 
-    function draw(img, x, y) {
-      ctx.drawImage(img, x * tile, y * tile, tile, tile);
-    }
+  // Python: total_cols = n + 2; big_w = (total_cols + 1) * w + generator.width
+  const total_cols = n + 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = (total_cols + 1) * tile + images.generator.width;
+  canvas.height = 4 * tile;
+  const ctx = canvas.getContext("2d");
 
-    // 左第一列
-    draw(images.belt, 0, 0);
-    draw(images.belt, 0, 3);
+  // 旋转版本（对应 Python）
+  // img1 = belt
+  // img1_r90 = img1.rotate(-90)
+  // img1_r180 = img1.rotate(180)
+  // img2 = combiner
+  // img2_r180 = img2.rotate(180)
 
-    let seenFirstOne = false;
+  // 最左边新增一列：1, blank, blank, 1(r180)
+  // 用 belt 与 belt 180°
+  ctx.drawImage(images.belt, 0*tile, 0*tile, tile, tile);
+  drawRotated(ctx, images.belt, 0, 3, tile, 180);
 
-    for (let i = 0; i < n; i++) {
-      const x = i + 1;
-      const v = lastDpActual[i];
+  let seen_first_one = false;
 
-      if (i === n - 1) {
-        draw(images.diverter, x, 0);
-        draw(images.logistics_bridge, x, 1);
-        draw(images.belt_turn, x, 2);
-        draw(images.combiner, x, 3);
+  for (let i = 0; i < n; i++) {
+    const x = i + 1;
+    const v = lastDpActual[i];
+
+    if (i === n - 1) {
+      // 最后一列：强制按 0 的样式（“已遇到1之后”的版本）
+      // [img3, img4, img1_r90, img2_r180]
+      // img3 = diverter, img4 = logistics_bridge, img1_r90 = belt(-90), img2_r180 = combiner(180)
+      ctx.drawImage(images.diverter, x*tile, 0*tile, tile, tile);
+      ctx.drawImage(images.logistics_bridge, x*tile, 1*tile, tile, tile);
+      drawRotated(ctx, images.belt, x, 2, tile, 90);
+      drawRotated(ctx, images.combiner, x, 3, tile, 180);
+    } else {
+      if (v === 1) {
+        seen_first_one = true;
+        // [img3, img2, blank, img2_r180]
+        // img3 = diverter, img2 = combiner, img2_r180 = combiner(180)
+        ctx.drawImage(images.diverter, x*tile, 0*tile, tile, tile);
+        ctx.drawImage(images.combiner, x*tile, 1*tile, tile, tile);
+        drawRotated(ctx, images.combiner, x, 3, tile, 180);
       } else {
-        if (v === 1) {
-          seenFirstOne = true;
-          draw(images.diverter, x, 0);
-          draw(images.combiner, x, 1);
-          draw(images.combiner, x, 3);
+        // v == 0
+        ctx.drawImage(images.diverter, x*tile, 0*tile, tile, tile);
+        if (!seen_first_one) {
+          // 第一个 1 之前的 0: [img3, img1_r90, img1_r90, img2_r180]
+          drawRotated(ctx, images.belt, x, 1, tile, 90);
+          drawRotated(ctx, images.belt, x, 2, tile, 90);
+          drawRotated(ctx, images.combiner, x, 3, tile, 180);
         } else {
-          draw(images.diverter, x, 0);
-          if (!seenFirstOne) {
-            draw(images.belt_turn, x, 1);
-            draw(images.belt_turn, x, 2);
-          } else {
-            draw(images.logistics_bridge, x, 1);
-            draw(images.belt_turn, x, 2);
-          }
-          draw(images.combiner, x, 3);
+          // 第一个 1 之后的 0: [img3, img4, img1_r90, img2_r180]
+          ctx.drawImage(images.logistics_bridge, x*tile, 1*tile, tile, tile);
+          drawRotated(ctx, images.belt, x, 2, tile, 90);
+          drawRotated(ctx, images.combiner, x, 3, tile, 180);
         }
       }
     }
+  }
 
-    // 追加列
-    draw(images.combiner, n+1, 0);
-    draw(images.belt_turn, n+1, 1);
+  // 追加的第 1 列：2, 5, blank, blank
+  // Python: [img2, img5, blank, blank] => combiner, belt_turn
+  const x1 = n + 1;
+  ctx.drawImage(images.combiner, x1*tile, 0*tile, tile, tile);
+  ctx.drawImage(images.belt_turn, x1*tile, 1*tile, tile, tile);
 
-    draw(images.belt, n+2, 0);
+  // 追加的第 2 列：1, blank, blank, blank => belt
+  const x2 = n + 2;
+  ctx.drawImage(images.belt, x2*tile, 0*tile, tile, tile);
 
-    ctx.drawImage(images.generator, (n+3)*tile, 0);
+  // 追加的第 3 列：generator
+  const x3 = n + 3;
+  ctx.drawImage(images.generator, x3*tile, 0);
 
-    const dataURL = canvas.toDataURL("image/png");
-    lastImageDataURL = dataURL;
+  const dataURL = canvas.toDataURL("image/png");
+  lastImageDataURL = dataURL;
 
-    const imgEl = document.getElementById("resultImage");
-    imgEl.src = dataURL;
-
-    document.getElementById("imageContainer").style.display = "block";
-    document.getElementById("openOriginalBtn").style.display = "inline-block";
-  });
+  const imgEl = document.getElementById("resultImage");
+  imgEl.src = dataURL;
+  document.getElementById("imageContainer").style.display = "block";
+  document.getElementById("openOriginalBtn").style.display = "inline-block";
 }
 
+/* ---------- UI ---------- */
 function openOriginalImage() {
   if (!lastImageDataURL) return;
   const w = window.open();
   w.document.write(`<img src="${lastImageDataURL}" style="display:block;">`);
 }
 
-/* ---------- 计算按钮 ---------- */
 function onCalculate() {
   const out = document.getElementById("output");
-
-  // 清空旧图
   document.getElementById("imageContainer").style.display = "none";
   document.getElementById("genImgBtn").style.display = "none";
   document.getElementById("openOriginalBtn").style.display = "none";
-  lastDpActual = null;
-  lastImageDataURL = null;
+  lastDpActual = null; lastImageDataURL = null;
 
   try {
     const N = parseInt(document.getElementById("nInput").value, 10);
@@ -392,9 +370,7 @@ function onCalculate() {
     out.value = result.text;
     lastDpActual = result.dp_actual;
 
-    if (lastDpActual) {
-      document.getElementById("genImgBtn").style.display = "inline-block";
-    }
+    if (lastDpActual) document.getElementById("genImgBtn").style.display = "inline-block";
   } catch (e) {
     out.value = "错误: " + e.message;
   }
